@@ -33,6 +33,7 @@ import {
 } from "./helpers/dispatcher";
 import {areArraysShallowEqualSameOrder, areObjectsShallowEqual, toString} from "./helpers/util";
 import {getBoundingRectNoTransforms} from "./helpers/intersection";
+import {svelteNodeClone} from "./helpers/svelteNodeClone";
 
 const DEFAULT_DROP_ZONE_TYPE = "--any--";
 const MIN_OBSERVATION_INTERVAL_MS = 100;
@@ -297,7 +298,7 @@ function cleanupPostDrop() {
         scheduledForRemovalAfterDrop.forEach(({dz, destroy}) => {
             destroy();
             dz.remove();
-        })
+        });
         scheduledForRemovalAfterDrop = [];
     }
     draggedEl = undefined;
@@ -328,7 +329,8 @@ export function dndzone(node, options) {
         dropTargetStyle: DEFAULT_DROP_TARGET_STYLE,
         dropTargetClasses: [],
         transformDraggedElement: () => {},
-        centreDraggedOnCursor: false
+        centreDraggedOnCursor: false,
+        cloneForDrag: svelteNodeClone
     };
     printDebug(() => [`dndzone good to go options: ${toString(options)}, config: ${toString(config)}`, {node}]);
     let elToIdx = new Map();
@@ -406,7 +408,7 @@ export function dndzone(node, options) {
         const placeHolderElData = {...shadowElData, [ITEM_ID_KEY]: SHADOW_PLACEHOLDER_ITEM_ID};
 
         // creating the draggable element
-        draggedEl = createDraggedElementFrom(originalDragTarget, centreDraggedOnCursor && currentMousePosition);
+        draggedEl = createDraggedElementFrom(originalDragTarget, centreDraggedOnCursor && currentMousePosition, config.cloneForDrag);
         // We will keep the original dom node in the dom because touch events keep firing on it, we want to re-add it after the framework removes it
         function keepOriginalElementInDom() {
             if (!draggedEl.parentElement) {
@@ -451,7 +453,8 @@ export function dndzone(node, options) {
         dropTargetStyle = DEFAULT_DROP_TARGET_STYLE,
         dropTargetClasses = [],
         transformDraggedElement = () => {},
-        centreDraggedOnCursor = false
+        centreDraggedOnCursor = false,
+        cloneForDrag = svelteNodeClone
     }) {
         config.dropAnimationDurationMs = dropAnimationDurationMs;
         if (config.type && newType !== config.type) {
@@ -464,6 +467,7 @@ export function dndzone(node, options) {
         config.morphDisabled = morphDisabled;
         config.transformDraggedElement = transformDraggedElement;
         config.centreDraggedOnCursor = centreDraggedOnCursor;
+        config.cloneForDrag = cloneForDrag;
 
         // realtime update for dropTargetStyle
         if (
@@ -554,7 +558,7 @@ export function dndzone(node, options) {
                 printDebug(() => "pointer dndzone will be scheduled for destruction");
                 scheduleDZForRemovalAfterDrop(node, destroyDz);
             } else {
-               destroyDz();
+                destroyDz();
             }
         }
     };

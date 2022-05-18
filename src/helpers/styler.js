@@ -1,6 +1,5 @@
 import {SHADOW_ELEMENT_ATTRIBUTE_NAME, DRAGGED_ELEMENT_ID} from "../constants";
 import {findCenter} from "./intersection";
-import { svelteNodeClone } from "./svelteNodeClone";
 
 const TRANSITION_DURATION_SECONDS = 0.2;
 
@@ -18,9 +17,9 @@ function trs(property) {
  * @param {Point} [positionCenterOnXY]
  * @return {Node} - the cloned, styled element
  */
-export function createDraggedElementFrom(originalElement, positionCenterOnXY) {
+export function createDraggedElementFrom(originalElement, positionCenterOnXY, cloneForDrag) {
     const rect = originalElement.getBoundingClientRect();
-    const draggedEl = svelteNodeClone(originalElement);
+    const draggedEl = cloneForDrag(originalElement);
     copyStylesFromTo(originalElement, draggedEl);
     draggedEl.id = DRAGGED_ELEMENT_ID;
     draggedEl.style.position = "fixed";
