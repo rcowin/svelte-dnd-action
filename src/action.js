@@ -56,6 +56,7 @@ function validateOptions(options) {
         transformDraggedElement,
         autoAriaDisabled,
         centreDraggedOnCursor,
+        cloneForDrag,
         ...rest
     } = options;
     /*eslint-enable*/
@@ -78,5 +79,10 @@ function validateOptions(options) {
 }
 
 function isInt(value) {
-    return !isNaN(value) && (function(x) { return (x | 0) === x; })(parseFloat(value));
+    return (
+        !isNaN(value) &&
+        (function (x) {
+            return (x | 0) === x;
+        })(parseFloat(value))
+    );
 }

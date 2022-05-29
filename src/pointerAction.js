@@ -265,7 +265,9 @@ function handleDrop() {
         unDecorateShadowElement(shadowElDropZone.children[shadowElIdx]);
         cleanupPostDrop();
     }
-    animateDraggedToFinalPosition(shadowElIdx, finalizeWithinZone);
+    if (dzToConfig.cloneForDrag === svelteNodeClone) {
+        animateDraggedToFinalPosition(shadowElIdx, finalizeWithinZone);
+    }
 }
 
 // helper function for handleDrop
@@ -525,6 +527,8 @@ export function dndzone(node, options) {
                 }
                 decorateShadowEl(draggableEl);
                 continue;
+            } else {
+                config.transformDraggedElement(draggedEl, draggedElData, idx);
             }
             draggableEl.removeEventListener("mousedown", elToMouseDownListener.get(draggableEl));
             draggableEl.removeEventListener("touchstart", elToMouseDownListener.get(draggableEl));

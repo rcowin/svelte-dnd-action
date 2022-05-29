@@ -55,7 +55,8 @@ export function getBoundingRectNoTransforms(el) {
  * @return {{top: number, left: number, bottom: number, right: number}}
  */
 export function getAbsoluteRectNoTransforms(el) {
-    const rect = getBoundingRectNoTransforms(el);
+    const rect = el.getBoundingClientRect(el);
+    // const rect = getBoundingRectNoTransforms(el);
     return {
         top: rect.top + window.scrollY,
         bottom: rect.bottom + window.scrollY,
