@@ -262,11 +262,15 @@ function handleDrop() {
                 source: SOURCES.POINTER
             });
         }
-        unDecorateShadowElement(shadowElDropZone.children[shadowElIdx]);
+        if (dzToConfig.cloneForDrag === svelteNodeClone) {
+            unDecorateShadowElement(shadowElDropZone.children[shadowElIdx]);
+        }
         cleanupPostDrop();
     }
     if (dzToConfig.cloneForDrag === svelteNodeClone) {
         animateDraggedToFinalPosition(shadowElIdx, finalizeWithinZone);
+    } else {
+        finalizeWithinZone();
     }
 }
 
