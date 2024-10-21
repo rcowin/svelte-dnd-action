@@ -22,7 +22,7 @@ It is being actively maintained.
 -   Rich animations (can be opted out of)
 -   Touch support
 -   Define what can be dropped where (dnd-zones optionally have a "type")
--   Scroll dnd-zones and/or the window horizontally or vertically by placing the dragged element next to the edge
+-   Scroll dnd-zones (of the relevant "type"), parent containers that contains them and/or the window horizontally or vertically by placing the dragged element next to the edge
 -   Supports advanced use-cases such as various flavours of copy-on-drag and custom drag handles (see examples below)
 -   Performant and small footprint (no external dependencies, no fluff code)
 -   Fully accessible (beta) - keyboard support, aria attributes and assistive instructions for screen readers
@@ -82,7 +82,7 @@ npm install --save-dev svelte-dnd-action
         width: 50%;
         padding: 0.3em;
         border: 1px solid black;
-        /* this will allow the dragged element to scroll the list */
+        /* this will allow the dragged element to scroll the list although starting in version 0.9.41 the lib would detect any scrollable parent*/
         overflow: scroll;
         height: 200px;
     }
@@ -106,17 +106,19 @@ An options-object with the following attributes:
 | Name | Type | Required? | Default Value | Description |
 | ------------------------- | -------------- | ------------------------------------------------------------ | ------------------------------------------------- | ------------------------------------------------------------ |
 | `items` | Array&lt;Object&gt; | Yes. Each object in the array **has to have** an `id` property (key name can be overridden globally) with a unique value (within all dnd-zones of the same type) | N/A | The data array that is used to produce the list with the draggable items (the same thing you run your #each block on). The dndzone should not have children that don't originate in `items` |
-| `flipDurationMs` | Number | No | `0` | The same value you give the flip animation on the items (to make them animated as they "make space" for the dragged item). Set to zero or leave out if you don't want animations |
+| `flipDurationMs` | Number | No | `0` | The same value you give the flip animation on the items (to make them animated as they "make space" for the dragged item). Set to zero if you dont want animations, if unset it defaults to 100ms |
 | `type` | String | No | Internal | dnd-zones that share the same type can have elements from one dragged into another. By default, all dnd-zones have the same type |
 | `dragDisabled` | Boolean | No | `false` | Setting it to true will make it impossible to drag elements out of the dnd-zone. You can change it at any time, and the zone will adjust on the fly |
 | `morphDisabled` | Boolean | No | `false` | By default, when dragging over a zone, the dragged element is morphed to look like it would if dropped. You can prevent it by setting this option. |
 | `dropFromOthersDisabled` | Boolean | No | `false` | Setting it to true will make it impossible to drop elements from other dnd-zones of the same type. Can be useful if you want to limit the max number of items for example. You can change it at any time, and the zone will adjust on the fly |
 | `zoneTabIndex` | Number | No | `0` | Allow user to set custom tabindex to the list container when not dragging. Can be useful if you want to make the screen reader to skip the list container. You can change it at any time. |
+| `zoneItemTabIndex` | Number | No | `0` | Allow user to set custom tabindex to the list container items when not dragging. Can be useful if you use [Drag handles](https://github.com/isaacHagoel/svelte-dnd-action#examples-and-recipes). You can change it at any time. |
 | `dropTargetStyle` | Object&lt;String&gt; | No | `{outline: 'rgba(255, 255, 102, 0.7) solid 2px'}` | An object of styles to apply to the dnd-zone when items can be dragged into it. Note: the styles override any inline styles applied to the dnd-zone. When the styles are removed, any original inline styles will be lost |
 | `dropTargetClasses`| Array&lt;String&gt; | No | `[]` | A list of classes to apply to the dnd-zone when items can be dragged into it. Note: make sure the classes you use are global. |
 | `transformDraggedElement` | Function | No | `() => {}` | A function that is invoked when the draggable element enters the dnd-zone or hover overs a new index in the current dnd-zone. <br />Signature:<br />function(element, data, index) {}<br />**element**: The dragged element. <br />**data**: The data of the item from the items array.<br />**index**: The index the dragged element will become in the new dnd-zone.<br /><br />This allows you to override properties on the dragged element, such as innerHTML to change how it displays. If what you are after is altering styles, do it to the children, not to the dragged element itself |
 | `autoAriaDisabled` | Boolean | No | `false` | Setting it to true will disable all the automatically added aria attributes and aria alerts (for example when the user starts/ stops dragging using the keyboard).<br /> **Use it only if you intend to implement your own custom instructions, roles and alerts.** In such a case, you might find the exported function `alertToScreenReader(string)` useful. |
 | `centreDraggedOnCursor` | Boolean | No | `false` | Setting it to true will cause elements from this dnd-zone to position their center on the cursor on drag start, effectively turning the cursor to the focal point that triggers all the dnd events (ex: entering another zone). Useful for dnd-zones with large items that can be dragged over small items. |
+| `dropAnimationDisabled` | Boolean | No | `false` | Setting it to true will disable the animation of the dropped element to its final place. |
 
 ##### Output:
 
@@ -169,6 +171,73 @@ If you want to implement your own custom screen-reader alerts, roles and instruc
 -   Mouse drag and drop can be preformed independently of keyboard dragging (as in an item can be dragged with the mouse while in or out of keyboard initiated dragging-mode)
 -   Keyboard drag uses the same `consider` (only on drag start) and `finalize` (every time the item is moved) events but share only some of the `TRIGGERS`. The same handlers should work fine for both.
 
+### Drag Handles Support
+
+Due to popular demand, starting in version 0.9.46 the library exports a wrapper action that greatly improves the ergonomics around using drag handles.
+Notes:
+
+-   A draggable item within a `dragHandleZone` would not be draggable unless it has an element that uses the `dragHandle` action inside (doesn't have to be a direct child but has to be inside the bounding rect of the item).
+-   Don't forget an aria-label on the handle
+    Usage:
+
+```html
+<script>
+    import {dragHandleZone, dragHandle} from "svelte-dnd-action";
+    import {flip} from "svelte/animate";
+
+    let items = [
+        {
+            id: 1,
+            text: "Item 1"
+        },
+        {
+            id: 2,
+            text: "Item 2"
+        },
+        {
+            id: 3,
+            text: "Item 3"
+        }
+    ];
+    const flipDurationMs = 100;
+
+    function handleSort(e) {
+        items = e.detail.items;
+    }
+</script>
+
+<style>
+    div {
+        position: relative;
+        height: 1.5em;
+        width: 10em;
+        text-align: center;
+        border: 1px solid black;
+        margin: 0.2em;
+        padding: 0.3em;
+    }
+    .handle {
+        position: absolute;
+        right: 0;
+        width: 1em;
+        height: 0.5em;
+        background-color: grey;
+    }
+</style>
+
+<h3>Drag Handles</h3>
+<p>Items can be dragged using the grey handles via mouse, touch or keyboard. The text on the items can be selected without starting a drag</p>
+<hr />
+<section use:dragHandleZone="{{ items, flipDurationMs }}" on:consider="{handleSort}" on:finalize="{handleSort}">
+    {#each items as item (item.id)}
+    <div animate:flip="{{ duration: flipDurationMs }}">
+        <div use:dragHandle aria-label="drag-handle for {item.text}" class="handle" />
+        <span>{item.text}</span>
+    </div>
+    {/each}
+</section>
+```
+
 ### Examples and Recipes
 
 -   [Super basic, single list, no animation](https://svelte.dev/repl/bbd709b1a00b453e94658392c97a018a?version=3)
@@ -182,7 +251,9 @@ If you want to implement your own custom screen-reader alerts, roles and instruc
 -   [Customizing the placeholder(shadow) element](https://svelte.dev/repl/9c8db8b91b2142d19dcf9bc963a27838?version=3)
 
 -   [Copy on drag, simple and Dragula like](https://svelte.dev/repl/924b4cc920524065a637fa910fe10193?version=3)
--   [Drag handles](https://svelte.dev/repl/4949485c5a8f46e7bdbeb73ed565a9c7?version=3), courtesy of @gleuch
+-   [Copy on drop and a drop area with a single slot](https://svelte.dev/repl/b4e120c45c3e48e49a0d637f0cf097d9?version=3)
+-   [Drag handles using wrapper actions](https://svelte.dev/repl/cc1bc63be7a74830b4c97d428f62054d?version=4.2.17), for nested scenarios (same usage, it "just works"), see [here](https://svelte.dev/repl/4f7cbeb7b11b470b948e9af03b82a073?version=4.2.17) and [here](https://svelte.dev/repl/47c5f52f4c774cad8c367516395c7f99?version=4.2.17)
+-   [Drag handles - legacy](https://svelte.dev/repl/4949485c5a8f46e7bdbeb73ed565a9c7?version=3), use before version 0.9.46, courtesy of @gleuch
 -   [Interaction (save/get items) with an asynchronous server](https://svelte.dev/repl/964fdac31cb9496da9ded35002300abb?version=3)
 -   [Unsortable lists with custom aria instructions](https://svelte.dev/repl/e020ea1051dc4ae3ac2b697064f234bc?version=3)
 -   [Crazy nesting](https://svelte.dev/repl/fe8c9eca04f9417a94a8b6041df77139?version=3), courtesy of @zahachtah
@@ -205,7 +276,6 @@ If you want to implement your own custom screen-reader alerts, roles and instruc
 -   Any data that should "survive" when the items are dragged around and dropped should be included in the `items` array that is passed in.
 -   The host component must refresh the items that are passed in to the custom-action when receiving consider and finalize events (do not omit any handler).
 -   FYI, the library assumes it is okay to add a temporary item to the items list in any of the dnd-zones while an element is dragged around.
--   If you want dragged items to be able to scroll the container, make sure the scroll-container (the element with overflow:scroll) is the dnd-zone (the element decorated with this custom action)
 -   Svelte's built-in transitions might not play nice with this library. Luckily, it is an easy issue to work around. There are examples above.
 
 ### Overriding the item id key name
@@ -223,7 +293,25 @@ It applies globally (as in, all of your items everywhere are expected to have a 
 
 ### Debug output
 
-By default no debug output will be logged to the console. If you want to see internal debug messages, you can enable the debug output like this:
+By default, no debug output will be logged to the console. If you want to see internal debug messages, you can enable the debug output like this:
+
+```javascript
+import {setDebugMode} from "svelte-dnd-action";
+setDebugMode(true);
+```
+
+### Feature Flags
+
+Feature flags allow controlling global optional behaviour. They were originally introduced as a way to enable a workaround for a browser bug that helps in certain scenarios but comes with unwanted side effects in others.
+In order to set a feature flag use:
+
+```javascript
+import {setFeatureFlag, FEATURE_FLAG_NAMES} from "svelte-dnd-action";
+setFeatureFlag(FEATURE_FLAG_NAMES.MY_FLAG, true);
+```
+
+Currently, there is only one flag: USE_COMPUTED_STYLE_INSTEAD_OF_BOUNDING_RECT, which defaults to false.
+See issues [454](https://github.com/isaacHagoel/svelte-dnd-action/issues/454) and [470](https://github.com/isaacHagoel/svelte-dnd-action/issues/470) for details about why it is needed and when (most users don't need to care about this)
 
 ```javascript
 import {setDebugMode} from "svelte-dnd-action";
@@ -232,21 +320,53 @@ setDebugMode(true);
 
 ### Typescript
 
-If you are using Typescript, you will need to add the following block to your `global.d.ts` (at least until [this svelte issue](https://github.com/sveltejs/language-tools/issues/431) is resolved):
+#### Setup (Optional)
+
+TypeScript support has been added since version 0.9.40 and you do not need to set up any custom typings. However, in case you are using some older version or face some types issue, you will need to add the following block to your `global.d.ts` (at least until [this svelte issue](https://github.com/sveltejs/language-tools/issues/431) is resolved):
+
+##### Svelte 3 or below
 
 ```typescript
-declare type Item = import('svelte-dnd-action').Item;
-declare type DndEvent<ItemType = Item> = import('svelte-dnd-action').DndEvent<ItemType>;
+declare type Item = import("svelte-dnd-action").Item;
+declare type DndEvent<ItemType = Item> = import("svelte-dnd-action").DndEvent<ItemType>;
 declare namespace svelte.JSX {
-	interface HTMLAttributes<T> {
-		onconsider?: (event: CustomEvent<DndEvent<ItemType>> & { target: EventTarget & T }) => void;
-		onfinalize?: (event: CustomEvent<DndEvent<ItemType>> & { target: EventTarget & T }) => void;
-	}
+    interface HTMLAttributes<T> {
+        onconsider?: (event: CustomEvent<DndEvent<ItemType>> & {target: EventTarget & T}) => void;
+        onfinalize?: (event: CustomEvent<DndEvent<ItemType>> & {target: EventTarget & T}) => void;
+    }
 }
+```
 
+##### Svelte 4:
+
+```typescript
+declare type Item = import("svelte-dnd-action").Item;
+declare type DndEvent<ItemType = Item> = import("svelte-dnd-action").DndEvent<ItemType>;
+declare namespace svelteHTML {
+    interface HTMLAttributes<T> {
+        "on:consider"?: (event: CustomEvent<DndEvent<ItemType>> & {target: EventTarget & T}) => void;
+        "on:finalize"?: (event: CustomEvent<DndEvent<ItemType>> & {target: EventTarget & T}) => void;
+    }
+}
 ```
 
 You may need to edit `tsconfig.json` to include `global.d.ts` if it doesn't already: "include": ["src/**/*", "global.d.ts"].
+
+> Note: If you are using Sveltekit you should use `svelte.config.js` to modify the generated `tsconfig.json` rather than adding the `include` element to the root `tsconfig.json`. Adding `include` to the root file will cause issues because it will [override](https://www.typescriptlang.org/tsconfig#extends) the `include` array defined in `.svelte-kit/tsconfig.json`. Example:
+>
+> ```javascript
+> const config = {
+>     kit: {
+>         typescript: {
+>             config(config) {
+>                 // This path is relative to the ".svelte-kit" folder
+>                 config.include.push("../global.d.ts");
+>             }
+>         }
+>     }
+> };
+> ```
+
 Then you will be able to use the library with type safety as follows (Typescript gurus out there, improvements are welcome :smile:):
 
 ```html
@@ -307,14 +427,46 @@ You can use generics to set the type of `items` you are expecting in `DndEvent`.
         items = e.detail.items;
     }
 
-	let items: Dog[] = [
-		{ id: 1, name: 'Fido', breed: 'bulldog' },
-		{ id: 2, name: 'Spot', breed: 'labrador' },
-		{ id: 3, name: 'Jacky', breed: 'golden retriever' }
-	];
+    let items: Dog[] = [
+        {id: 1, name: "Fido", breed: "bulldog"},
+        {id: 2, name: "Spot", breed: "labrador"},
+        {id: 3, name: "Jacky", breed: "golden retriever"}
+    ];
 </script>
 ```
 
+### Nested Zones Optional Optimization (experimental)
+
+This is an experimental feature added in version 0.9.29. If you have multiple levels of nesting, the lib might do unnecessary work when dragging an element that has nested zones inside.
+Specifically, it allows nested zones within the shadow element (the placeholder under the dragged element) to register and destroy.
+This is because Svelte calls nested actions before the parent action (opposite to the rendering order).
+You can use a data attribute **on the items** to help the lib prevent this: `data-is-dnd-shadow-item-hint={item[SHADOW_ITEM_MARKER_PROPERTY_NAME]} `
+Starting with version 0.9.42. if you use the hint make sure to include it in the key you provide in your each block e.g:
+
+```sveltehtml
+{#each columnItems as column (`${column._id}${column[SHADOW_ITEM_MARKER_PROPERTY_NAME] ? "_" + column[SHADOW_ITEM_MARKER_PROPERTY_NAME] : ""}`)}
+   ...
+{/each}
+```
+
+#### Simplified Example (just shows where to place the attribute):
+
+```html
+<script>
+    import {dndzone, SHADOW_ITEM_MARKER_PROPERTY_NAME} from 'svelte-dnd-action';
+    let items = [];
+</script>
+<section>
+    <div use:dndzone={{items}} on:consider={e => items = e.detail.items} on:finalize={e => items = e.detail.items}>
+        {#each items as item (item.id)}
+            <div data-is-dnd-shadow-item-hint={item[SHADOW_ITEM_MARKER_PROPERTY_NAME]}>
+                <h1>{item.title}</h1>
+                <!--more nested zones go here, can include the attribute on their items as demonstrated above-->
+            </div>
+        {/each}
+    </div>
+</section>
+```
 
 ### Contributing [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/isaacHagoel/svelte-dnd-action/issues)
 

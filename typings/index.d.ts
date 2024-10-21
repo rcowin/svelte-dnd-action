@@ -1,14 +1,39 @@
+import type {ActionReturn} from "svelte/action";
+
 /**
  * A custom action to turn any container to a dnd zone and all of its direct children to draggables
  * Supports mouse, touch and keyboard interactions.
  * Dispatches two events that the container is expected to react to by modifying its list of items,
  * which will then feed back in to this action via the update function
  */
-export declare function dndzone(
+export declare function dndzone<T extends Item>(node: HTMLElement, options: Options<T>): ActionReturn<Options<T>, DndZoneAttributes<T>>;
+
+export declare function dndzone<T extends Item>(
     node: HTMLElement,
-    options: Options
+    options: Options<T>
 ): {
-    update: (newOptions: Options) => void;
+    update: (newOptions: Options<T>) => void;
+    destroy: () => void;
+};
+
+/**
+ * A wrapper action to make it easy to work with drag handles.
+ * When using this you must also use the 'dragHandle' action on an element inside each item within the zone.
+ */
+export declare function dragHandleZone<T extends Item>(node: HTMLElement, options: Options<T>): ActionReturn<Options<T>, DndZoneAttributes<T>>;
+export declare function dragHandleZone<T extends Item>(
+    node: HTMLElement,
+    options: Options<T>
+): {
+    update: (newOptions: Options<T>) => void;
+    destroy: () => void;
+};
+
+/**
+ * This should be used to mark drag handles inside items that belong to a 'dragHandleZone'
+ */
+export declare function dragHandle(node: HTMLElement): {
+    update: () => void;
     destroy: () => void;
 };
 
@@ -19,19 +44,28 @@ export type TransformDraggedElementFunction = (
 ) => void;
 
 export declare type Item = Record<string, any>;
-export interface Options {
-    items: Item[]; // the list of items that was used to generate the children of the given node
+export interface Options<T extends Item = Item> {
+    items: T[]; // the list of items that was used to generate the children of the given node
     type?: string; // the type of the dnd zone. children dragged from here can only be dropped in other zones of the same type, defaults to a base type
     flipDurationMs?: number; // if the list animated using flip (recommended), specifies the flip duration such that everything syncs with it without conflict
     dragDisabled?: boolean;
     morphDisabled?: boolean;
     dropFromOthersDisabled?: boolean;
     zoneTabIndex?: number; // set the tabindex of the list container when not dragging
+    zoneItemTabIndex?: number; // set the tabindex of the list container items when not dragging
     dropTargetClasses?: string[];
     dropTargetStyle?: Record<string, string>;
     transformDraggedElement?: TransformDraggedElementFunction;
     autoAriaDisabled?: boolean;
     centreDraggedOnCursor?: boolean;
+    dropAnimationDisabled?: boolean;
+}
+
+export interface DndZoneAttributes<T> {
+    "on:consider"?: (e: CustomEvent<DndEvent<T>>) => void;
+    "on:finalize"?: (e: CustomEvent<DndEvent<T>>) => void;
+    onconsider?: (e: CustomEvent<DndEvent<T>>) => void;
+    onfinalize?: (e: CustomEvent<DndEvent<T>>) => void;
 }
 
 /**
@@ -78,8 +112,15 @@ export type DndEvent<T = Item> = {
 export declare const SHADOW_ITEM_MARKER_PROPERTY_NAME: "isDndShadowItem";
 export declare const SHADOW_PLACEHOLDER_ITEM_ID: "id:dnd-shadow-placeholder-0000";
 export declare const DRAGGED_ELEMENT_ID: "dnd-action-dragged-el";
+export declare const SHADOW_ELEMENT_HINT_ATTRIBUTE_NAME = "data-is-dnd-shadow-item-hint";
 
 /**
  * Allows the user to show/hide console debug output
  */
 export declare function setDebugMode(isDebug: boolean): void;
+
+export enum FEATURE_FLAG_NAMES {
+    // Default value: false, This flag exists as a workaround for issue 454 (basically a browser bug) - seems like these rect values take time to update when in grid layout. Setting it to true can cause strange behaviour in the REPL for non-grid zones, see issue 470
+    USE_COMPUTED_STYLE_INSTEAD_OF_BOUNDING_RECT = "FEATURE_FLAG_NAMES.USE_COMPUTED_STYLE_INSTEAD_OF_BOUNDING_RECT"
+}
+export declare function setFeatureFlag(flagName: FEATURE_FLAG_NAMES, flagValue: boolean);

@@ -1,6 +1,6 @@
 import {dndzone as pointerDndZone} from "./pointerAction";
 import {dndzone as keyboardDndZone} from "./keyboardAction";
-import {ITEM_ID_KEY} from "./constants";
+import {ITEM_ID_KEY, SHADOW_ELEMENT_HINT_ATTRIBUTE_NAME} from "./constants";
 import {toString} from "./helpers/util";
 
 /**
@@ -17,14 +17,22 @@ import {toString} from "./helpers/util";
  * @property {boolean} [morphDisabled] - whether dragged element should morph to zone dimensions
  * @property {boolean} [dropFromOthersDisabled]
  * @property {number} [zoneTabIndex] - set the tabindex of the list container when not dragging
+ * @property {number} [zoneItemTabIndex] - set the tabindex of the list container items when not dragging
  * @property {object} [dropTargetStyle]
  * @property {string[]} [dropTargetClasses]
+ * @property {boolean} [dropAnimationDisabled] - cancels the drop animation to place
  * @property {function} [transformDraggedElement]
  * @param {HTMLElement} node - the element to enhance
  * @param {Options} options
  * @return {{update: function, destroy: function}}
  */
 export function dndzone(node, options) {
+    if (shouldIgnoreZone(node)) {
+        return {
+            update: () => {},
+            destroy: () => {}
+        };
+    }
     validateOptions(options);
     const pointerZone = pointerDndZone(node, options);
     const keyboardZone = keyboardDndZone(node, options);
@@ -41,6 +49,16 @@ export function dndzone(node, options) {
     };
 }
 
+/**
+ * If the user marked something in the ancestry of our node as shadow element, we can ignore it
+ * We need the user to mark it for us because svelte updates the action from deep to shallow (but renders top down)
+ * @param {HTMLElement} node
+ * @return {boolean}
+ */
+function shouldIgnoreZone(node) {
+    return !!node.closest(`[${SHADOW_ELEMENT_HINT_ATTRIBUTE_NAME}="true"]`);
+}
+
 function validateOptions(options) {
     /*eslint-disable*/
     const {
@@ -51,11 +69,13 @@ function validateOptions(options) {
         morphDisabled,
         dropFromOthersDisabled,
         zoneTabIndex,
+        zoneItemTabIndex,
         dropTargetStyle,
         dropTargetClasses,
         transformDraggedElement,
         autoAriaDisabled,
         centreDraggedOnCursor,
+        dropAnimationDisabled,
         ...rest
     } = options;
     /*eslint-enable*/
@@ -75,8 +95,16 @@ function validateOptions(options) {
     if (zoneTabIndex && !isInt(zoneTabIndex)) {
         throw new Error(`zoneTabIndex should be a number but instead it is a ${typeof zoneTabIndex}, ${toString(zoneTabIndex)}`);
     }
+    if (zoneItemTabIndex && !isInt(zoneItemTabIndex)) {
+        throw new Error(`zoneItemTabIndex should be a number but instead it is a ${typeof zoneItemTabIndex}, ${toString(zoneItemTabIndex)}`);
+    }
 }
 
 function isInt(value) {
-    return !isNaN(value) && (function(x) { return (x | 0) === x; })(parseFloat(value));
+    return (
+        !isNaN(value) &&
+        (function (x) {
+            return (x | 0) === x;
+        })(parseFloat(value))
+    );
 }
