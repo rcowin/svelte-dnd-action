@@ -1,6 +1,150 @@
 ## Svelte Dnd Action - Release Notes
 
+### [0.9.52](https://github.com/isaacHagoel/svelte-dnd-action/pull/610)
+
+Fixed a bug that affected dndzone inside scrollable parents - calculated the target index incorrectly when the element was above a hidden part of the zone
+
+### [0.9.51](https://github.com/isaacHagoel/svelte-dnd-action/pull/608)
+
+Added the option to disable the final drop animation
+
+### [0.9.50](https://github.com/isaacHagoel/svelte-dnd-action/pull/598)
+
+Fixed a bug where library would crash when a store updated "considers" in local storage from another tab
+
+### [0.9.49](https://github.com/isaacHagoel/svelte-dnd-action/pull/588)
+
+Fixed a bug where library would crash if one of the canvas had an empty size
+
+### [0.9.48](https://github.com/isaacHagoel/svelte-dnd-action/pull/582)
+
+Fixed a bug where the scroller would stay active and scroll the page after drop
+
+### [0.9.47](https://github.com/isaacHagoel/svelte-dnd-action/pull/578)
+
+Added examples to the README (for the drag handles wrapper actions).
+
+### [0.9.46](https://github.com/isaacHagoel/svelte-dnd-action/pull/576)
+
+Added two wrapper actions (`dragHandleZone` and `dragHandle`) to make using drag handle easy.
+
+### [0.9.45](https://github.com/isaacHagoel/svelte-dnd-action/pull/573)
+
+Bug fix - calling transformDraggedElement after the element was morphed so that changes transform makes aren't overridden by the morphing.
+
+### [0.9.44](https://github.com/isaacHagoel/svelte-dnd-action/pull/567)
+
+Allows Svelte 5.0.0-next as peer dependency.
+
+### [0.9.43](https://github.com/isaacHagoel/svelte-dnd-action/pull/556)
+
+Fixes an issue on some touch devices, where attempting to drag an item causes the page to scroll.
+
+### [0.9.42](https://github.com/isaacHagoel/svelte-dnd-action/pull/553)
+
+Fixes that won't affect most use cases (but do affect recursive nesting).
+Fixed updating the items config prior to configure being called.
+Restored using the real id throughout the drag operation after the initial frame to prevent issues from implementations relying on it.
+This affects the each loop key should be set up when using `data-is-dnd-shadow-item-hint` (see README).
+
+### [0.9.41](https://github.com/isaacHagoel/svelte-dnd-action/pull/549)
+
+The library can now scroll dropzones and any scrollable element that contains dropzones inside, including the window.
+This happens when the mouse pointer is near one of the edges of a scrollable container during drag.
+
+### [0.9.40](https://github.com/isaacHagoel/svelte-dnd-action/pull/542)
+
+Added custom events typings with generics to support TypeScript out of the box.
+
+### [0.9.39](https://github.com/isaacHagoel/svelte-dnd-action/pull/538)
+
+Updated README to help set up sveltekit + typescript
+
+### [0.9.38](https://github.com/isaacHagoel/svelte-dnd-action/pull/533)
+
+Added fault tolerance for use cases in which the user removes the shadow item from the list (e.g zones with limited slots)
+
+### [0.9.37](https://github.com/isaacHagoel/svelte-dnd-action/pull/532)
+
+Added support for class instances as list items
+
+### [0.9.36](https://github.com/isaacHagoel/svelte-dnd-action/pull/528)
+
+Added `import` and `require` to the export block in package.json so that types are properly resolved.
+
+### [0.9.35](https://github.com/isaacHagoel/svelte-dnd-action/pull/527)
+
+Added an export block to package.json to remove a Svelte 5 (actually vite) warning about the deprecated "svelte" entry
+
+### [0.9.34](https://github.com/isaacHagoel/svelte-dnd-action/pull/524)
+
+Don't use this version please. It has a silly mistake that cause an error with Sveltekit 2
+
+### [0.9.33](https://github.com/isaacHagoel/svelte-dnd-action/pull/499)
+
+bugfix - now works properly inside a `<dialog>` element
+
+### [0.9.32](https://github.com/isaacHagoel/svelte-dnd-action/pull/517)
+
+Fixed canvas content not getting cloned on dragged node.
+
+### [0.9.31](https://github.com/isaacHagoel/svelte-dnd-action/pull/496)
+
+Introduce zoneItemTabindex - It allows the user to set custom tabindex to the list container items when not dragging. Can be useful if you use [Drag handles](https://github.com/isaacHagoel/svelte-dnd-action#examples-and-recipes)
+
+### [0.9.30](https://github.com/isaacHagoel/svelte-dnd-action/pull/493)
+
+This version introduces a way for the user to set the flipdurationms to 0, and have it actually have 0 animation (20ms or 1 frame animation). Useful for gaming
+as before the 100ms minimum made it so that it was too slow.
+
+### [0.9.29](https://github.com/isaacHagoel/svelte-dnd-action/pull/488)
+
+This version addresses some issues around nested zones. By-default the shadow element now has a temporary id until it's dropped.
+This version also adds the option to provide a hint data attribute (`data-is-dnd-shadow-item-hint`) that helps the lib optimise when there is a lot of nesting (see readme).
+
+### [0.9.28](https://github.com/isaacHagoel/svelte-dnd-action/pull/484)
+
+A revert of the problematic part in 0.9.27. This version is functionally equal to 0.9.26
+
+### [0.9.27](https://github.com/isaacHagoel/svelte-dnd-action/pull/481)
+
+PLEASE DON'T USE THIS VERSION
+An unsuccessful attempt to support for dropzone being added mid-drag. It breaks in nested scenarios.
+
+### [0.9.26](https://github.com/isaacHagoel/svelte-dnd-action/pull/476)
+
+Readme typo fix in an example: setFeatueFlag -> setFeatureFlag
+
+### [0.9.25](https://github.com/isaacHagoel/svelte-dnd-action/pull/473)
+
+Made the fix that was introduced in version 0.9.23 available via feature flag but inactive by default
+
+### [0.9.24](https://github.com/isaacHagoel/svelte-dnd-action/pull/459)
+
+Updated readme with Svelte 4 types configuration
+
+### [0.9.23](https://github.com/isaacHagoel/svelte-dnd-action/pull/457)
+
+Fix morphing when within css grid
+
+### [0.9.22](https://github.com/isaacHagoel/svelte-dnd-action/pull/410)
+
+Fix repl examples in Readme. Add svelte >=3.23.0 as peerDependency
+
+### [0.9.21](https://github.com/isaacHagoel/svelte-dnd-action/pull/405)
+
+transformDraggedElement is called even if morphing is disabled and a bug that has to do with morphing is now fixed (it was moving the element before styling it)
+
+### [0.9.20](https://github.com/isaacHagoel/svelte-dnd-action/pull/401)
+
+update README to fix global.d.ts example
+
+### [0.9.19](https://github.com/isaacHagoel/svelte-dnd-action/pull/382)
+
+enhancement: DndEvent now allows the use of generics.
+
 ### [0.9.18](https://github.com/isaacHagoel/svelte-dnd-action/pull/365)
+
 fix: if a drop zone is removed mid-drag it was causing the lib to throw errors
 
 ### [0.9.17](https://github.com/isaacHagoel/svelte-dnd-action/pull/320)

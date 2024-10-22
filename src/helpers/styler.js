@@ -1,5 +1,6 @@
 import {SHADOW_ELEMENT_ATTRIBUTE_NAME, DRAGGED_ELEMENT_ID} from "../constants";
 import {findCenter} from "./intersection";
+import {getFeatureFlag, FEATURE_FLAG_NAMES} from "../featureFlags";
 
 const TRANSITION_DURATION_SECONDS = 0.2;
 
@@ -64,9 +65,9 @@ export function moveDraggedElementToWasDroppedState(draggedEl) {
  * @param {HTMLElement} copyFromEl - the element the dragged element should look like, typically the shadow element
  * @param {number} currentMouseX
  * @param {number} currentMouseY
- * @param {function} transformDraggedElement - function to transform the dragged element, does nothing by default.
  */
-export function morphDraggedElementToBeLike(draggedEl, copyFromEl, currentMouseX, currentMouseY, transformDraggedElement) {
+export function morphDraggedElementToBeLike(draggedEl, copyFromEl, currentMouseX, currentMouseY) {
+    copyStylesFromTo(copyFromEl, draggedEl);
     const newRect = copyFromEl.getBoundingClientRect();
     const draggedElRect = draggedEl.getBoundingClientRect();
     const widthChange = newRect.width - draggedElRect.width;
@@ -76,15 +77,13 @@ export function morphDraggedElementToBeLike(draggedEl, copyFromEl, currentMouseX
             left: (currentMouseX - draggedElRect.left) / draggedElRect.width,
             top: (currentMouseY - draggedElRect.top) / draggedElRect.height
         };
-        draggedEl.style.height = `${newRect.height}px`;
-        draggedEl.style.width = `${newRect.width}px`;
+        if (!getFeatureFlag(FEATURE_FLAG_NAMES.USE_COMPUTED_STYLE_INSTEAD_OF_BOUNDING_RECT)) {
+            draggedEl.style.height = `${newRect.height}px`;
+            draggedEl.style.width = `${newRect.width}px`;
+        }
         draggedEl.style.left = `${parseFloat(draggedEl.style.left) - relativeDistanceOfMousePointerFromDraggedSides.left * widthChange}px`;
         draggedEl.style.top = `${parseFloat(draggedEl.style.top) - relativeDistanceOfMousePointerFromDraggedSides.top * heightChange}px`;
     }
-
-    /// other properties
-    copyStylesFromTo(copyFromEl, draggedEl);
-    transformDraggedElement();
 }
 
 /**
@@ -107,7 +106,9 @@ function copyStylesFromTo(copyFromEl, copyToEl) {
                 s.startsWith("border") ||
                 s === "opacity" ||
                 s === "color" ||
-                s === "list-style-type"
+                s === "list-style-type" ||
+                // copying with and height to make up for rect update timing issues in some browsers
+                (getFeatureFlag(FEATURE_FLAG_NAMES.USE_COMPUTED_STYLE_INSTEAD_OF_BOUNDING_RECT) && (s === "width" || s === "height"))
         )
         .forEach(s => copyToEl.style.setProperty(s, computedStyle.getPropertyValue(s), computedStyle.getPropertyPriority(s)));
 }
