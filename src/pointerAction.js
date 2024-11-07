@@ -431,6 +431,7 @@ export function dndzone(node, options) {
 
         // We will keep the original dom node in the dom because touch events keep firing on it, we want to re-add it after the framework removes it
         function keepOriginalElementInDom() {
+            if (!draggedEl) return;
             if (!draggedEl?.parentElement) {
                 originDropZoneRoot.appendChild(draggedEl);
                 // to prevent the outline from disappearing
